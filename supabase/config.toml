@@ -1,0 +1,7 @@
+project_id = "luspkshuwhnsltnhrskg"
+
+[functions.send-booking-confirmation]
+verify_jwt = false
+
+[functions.send-admin-notification]
+verify_jwt = false
