@@ -68,7 +68,17 @@ const BookingForm: React.FC = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await (supabase as any)
+      console.log('Creating booking with data:', {
+        full_name: fullName,
+        email: email,
+        service_needed: service,
+        preferred_date: format(selectedDate, 'yyyy-MM-dd'),
+        preferred_time: selectedTime,
+        additional_notes: notes || null,
+        status: 'pending'
+      });
+
+      const { data, error } = await supabase
         .from('bookings')
         .insert({
           full_name: fullName,
@@ -82,24 +92,41 @@ const BookingForm: React.FC = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
+      console.log('Booking created successfully:', data);
 
       // Send confirmation email
-      await supabase.functions.invoke('send-booking-confirmation', {
-        body: {
-          booking: data,
-          to_email: email,
-          client_name: fullName
-        }
-      });
+      try {
+        const confirmationResponse = await supabase.functions.invoke('send-booking-confirmation', {
+          body: {
+            booking: data,
+            to_email: email,
+            client_name: fullName
+          }
+        });
+        console.log('Confirmation email response:', confirmationResponse);
+      } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+        // Don't throw - booking was created successfully
+      }
 
       // Send admin notification
-      await supabase.functions.invoke('send-admin-notification', {
-        body: {
-          booking: data,
-          client_name: fullName
-        }
-      });
+      try {
+        const adminResponse = await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            booking: data,
+            client_name: fullName
+          }
+        });
+        console.log('Admin notification response:', adminResponse);
+      } catch (adminError) {
+        console.error('Error sending admin notification:', adminError);
+        // Don't throw - booking was created successfully
+      }
 
       setIsConfirmed(true);
       toast({
