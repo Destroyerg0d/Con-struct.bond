@@ -93,8 +93,13 @@ const BookingForm: React.FC = () => {
         .single();
 
       if (error) {
-        console.error('Database error:', error);
-        throw error;
+        console.error('Database error:', error.message || error);
+        toast({
+          title: "Booking Failed",
+          description: error.message || "There was an error processing your booking. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
       console.log('Booking created successfully:', data);
